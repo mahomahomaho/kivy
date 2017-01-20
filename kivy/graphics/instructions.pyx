@@ -25,6 +25,8 @@ from kivy.logger import Logger
 from kivy.graphics.context cimport get_context, Context
 from weakref import proxy
 
+import ilh
+
 
 cdef int _need_reset_gl = 1
 cdef int _active_texture = -1
@@ -148,6 +150,7 @@ cdef class InstructionGroup(Instruction):
             self.compiler = GraphicsCompiler()
 
     cdef int apply(self) except -1:
+        ilh.loggdesc_begin("igroup.apply")
         cdef Instruction c
         cdef list children
         if self.compiler is not None:
@@ -163,6 +166,7 @@ cdef class InstructionGroup(Instruction):
         else:
             for c in self.children:
                 c.apply()
+        ilh.loggdesc_end()
         return 0
 
     cdef void build(self):
