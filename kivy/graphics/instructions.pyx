@@ -607,7 +607,8 @@ cdef class Canvas(CanvasBase):
     cpdef draw(self):
         '''Apply the instruction to our window.
         '''
-        self.apply()
+        with ilh.loggdesc_with('Canvas.draw'):
+            self.apply()
 
     cdef int apply(self) except -1:
         cdef float opacity = self._opacity

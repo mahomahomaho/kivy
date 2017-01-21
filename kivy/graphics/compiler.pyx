@@ -62,8 +62,11 @@ include 'opcodes.pxi'
 from kivy.graphics.instructions cimport Instruction, RenderContext, ContextInstruction
 from kivy.graphics.context_instructions cimport BindTexture
 
+from ilh import loggdesc_begin, loggdesc_end
+
 cdef class GraphicsCompiler:
     cdef InstructionGroup compile(self, InstructionGroup group):
+        loggdesc_begin('GC.compile')
         cdef int count = 0
         cdef Instruction c
         cdef ContextInstruction ci
@@ -146,5 +149,7 @@ cdef class GraphicsCompiler:
             rc.flag_update(0)
 
         group.flags |= GI_NO_APPLY_ONCE
+
+        loggdesc_end()
 
         return group
