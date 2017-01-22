@@ -215,6 +215,10 @@ src_path = build_path = dirname(__file__)
 
 class KivyBuildExt(build_ext):
 
+    def __init__(self, *args, **kwargs):
+        build_ext.__init__(self, *args, **kwargs)
+        self.cython_gdb = True
+
     def finalize_options(self):
         retval = build_ext.finalize_options(self)
         global build_path
@@ -491,7 +495,8 @@ class CythonExtension(Extension):
         self.cython_directives = {
             'c_string_encoding': 'utf-8',
             'profile': 'USE_PROFILE' in environ,
-            'embedsignature': 'USE_EMBEDSIGNATURE' in environ}
+            'embedsignature': 'USE_EMBEDSIGNATURE' in environ,
+            'gdb_debug': True}
         # XXX with pip, setuptools is imported before distutils, and change
         # our pyx to c, then, cythonize doesn't happen. So force again our
         # sources

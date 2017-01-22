@@ -22,6 +22,8 @@ __all__ = (
     'stopTouchApp',
 )
 
+import ilh
+
 import sys
 from kivy.config import Config
 from kivy.logger import Logger
@@ -314,6 +316,7 @@ class EventLoopBase(EventDispatcher):
         while input_events:
             post_dispatch_input(*pop(0))
 
+    @ilh.loggdesc('EL.idle')
     def idle(self):
         '''This function is called after every frame. By default:
 
