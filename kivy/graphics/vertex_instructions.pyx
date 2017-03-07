@@ -55,7 +55,7 @@ __all__ = ('Triangle', 'Quad', 'Rectangle', 'RoundedRectangle', 'BorderImage', '
            'Line', 'Point', 'Mesh', 'GraphicException', 'Bezier', 'SmoothLine')
 
 
-include "config.pxi"
+include "../include/config.pxi"
 include "common.pxi"
 include "memory.pxi"
 
@@ -63,11 +63,7 @@ from os import environ
 from kivy.graphics.vbo cimport *
 from kivy.graphics.vertex cimport *
 from kivy.graphics.instructions cimport *
-from kivy.graphics.c_opengl cimport *
-IF USE_OPENGL_MOCK == 1:
-    from kivy.graphics.c_opengl_mock cimport *
-IF USE_OPENGL_DEBUG == 1:
-    from kivy.graphics.c_opengl_debug cimport *
+from kivy.graphics.cgl cimport *
 from kivy.logger import Logger
 from kivy.graphics.texture cimport Texture
 from kivy.utils import platform
@@ -380,7 +376,7 @@ cdef class Mesh(VertexInstruction):
         buffers cannot be readonly (even though they are not changed, due to
         a cython limitation) and must be contiguous in memory.
 
-    ..note::
+    .. note::
         When passing a memoryview or a instance that implements the buffer
         interface, `vertices` should be a buffer of floats (`'f'` code in
         python array) and `indices` should be a buffer of unsigned short (`'H'`
@@ -491,7 +487,7 @@ cdef class Mesh(VertexInstruction):
         'triangle_fan'.
         '''
         def __get__(self):
-            self.batch.get_mode()
+            return self.batch.get_mode()
         def __set__(self, mode):
             self.batch.set_mode(mode)
 
@@ -852,7 +848,7 @@ cdef class BorderImage(Rectangle):
 
     :Parameters:
         `border`: list
-            Border information in the format (top, right, bottom, left).
+            Border information in the format (bottom, right, top, left).
             Each value is in pixels.
 
         `auto_scale`: bool
@@ -860,7 +856,7 @@ cdef class BorderImage(Rectangle):
 
             If the BorderImage's size is less than the sum of it's
             borders, horizontally or vertically, and this property is
-            set to True, the borders will be rescaled to accomodate for
+            set to True, the borders will be rescaled to accommodate for
             the smaller size.
 
     '''

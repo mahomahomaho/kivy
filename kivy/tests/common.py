@@ -14,10 +14,11 @@ __all__ = ('GraphicUnitTest', )
 import unittest
 import logging
 import os
+from kivy.graphics.cgl import cgl_get_backend_name
 log = logging.getLogger('unittest')
 
 _base = object
-if not bool(int(os.environ.get('USE_OPENGL_MOCK', 0))):
+if 'mock' != cgl_get_backend_name():
     _base = unittest.TestCase
 
 
@@ -94,7 +95,7 @@ class GraphicUnitTest(_base):
         from shutil import move, copy
 
         # don't save screenshot until we have enough frames.
-        #log.debug('framecount %d' % self.framecount)
+        # log.debug('framecount %d' % self.framecount)
         self.framecount -= 1
         if self.framecount > 0:
             return

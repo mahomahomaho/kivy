@@ -2,15 +2,11 @@
 RecycleView
 ===========
 
-.. versionadded:: 1.9.2
+.. versionadded:: 1.10.0
 
 The RecycleView provides a flexible model for viewing selected sections of
 large data sets. It aims to prevent the performance degradation that can occur
 when generating large numbers of widgets in order to display many data items.
-
-.. warning::
-    This module is highly experimental, its API may change in the future and
-    the documentation is not complete at this time.
 
 The view is generatad by processing the :attr:`~RecycleView.data`, essentially
 a list of dicts, and uses these dicts to generate instances of the
@@ -260,8 +256,9 @@ class RecycleViewBehavior(object):
 
     def refresh_from_data(self, *largs, **kwargs):
         """
-        This should be called when data changes. Data changes typically indicate
-        that everything should be be recomputed since the source data changed.
+        This should be called when data changes. Data changes typically
+        indicate that everything should be recomputed since the source data
+        changed.
 
         This method is automatically bound to the
         :attr:`~RecycleDataModelBehavior.on_data_changed` method of the

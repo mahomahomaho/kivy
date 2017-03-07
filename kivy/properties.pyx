@@ -214,7 +214,7 @@ __all__ = ('Property',
            'OptionProperty', 'ReferenceListProperty', 'AliasProperty',
            'DictProperty', 'VariableListProperty', 'ConfigParserProperty')
 
-include "graphics/config.pxi"
+include "include/config.pxi"
 
 
 from weakref import ref
@@ -1872,7 +1872,7 @@ cdef class ColorProperty(Property):
         `defaultvalue`: list or string, defaults to [1, 1, 1, 1]
             Specifies the default value of the property.
 
-    .. versionadded:: 1.9.2
+    .. versionadded:: 1.10.0
     '''
     def __init__(self, defaultvalue=None, **kw):
         defaultvalue = defaultvalue or [1, 1, 1, 1]

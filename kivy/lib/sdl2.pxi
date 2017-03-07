@@ -416,6 +416,8 @@ cdef extern from "SDL.h":
     ctypedef int SDL_EventFilter(void* userdata, SDL_Event* event)
 
     cdef char *SDL_HINT_ORIENTATIONS
+    cdef char *SDL_HINT_VIDEO_WIN_D3DCOMPILER
+    cdef char *SDL_HINT_ACCELEROMETER_AS_JOYSTICK
 
     cdef int SDL_QUERY               = -1
     cdef int SDL_IGNORE              =  0
@@ -565,6 +567,7 @@ cdef extern from "SDL.h":
     cdef void SDL_GL_SwapWindow(SDL_Window * window)
     cdef void SDL_GL_DeleteContext(SDL_GLContext context)
 
+    cdef int SDL_NumJoysticks()
     cdef SDL_Joystick * SDL_JoystickOpen(int index)
     cdef SDL_Window * SDL_GetKeyboardFocus()
     cdef Uint8 *SDL_GetKeyboardState(int *numkeys)

@@ -417,7 +417,7 @@ class BuilderBase(object):
         '''Search all the rules that match `rule_name` widget
         and apply them to `widget`.
 
-        .. versionadded:: 1.9.2
+        .. versionadded:: 1.10.0
 
         `ignored_consts` is a set or list type whose elements are property
         names for which constant KV rules (i.e. those that don't create
@@ -595,11 +595,11 @@ class BuilderBase(object):
                             rctx['ids'])
                         # if there's a rule
                         if (widget_set != widget or bound or
-                            key not in ignored_consts):
+                                key not in ignored_consts):
                             setattr(widget_set, key, value)
                     else:
                         if (widget_set != widget or
-                            key not in ignored_consts):
+                                key not in ignored_consts):
                             setattr(widget_set, key, value)
 
         except Exception as e:
@@ -707,25 +707,25 @@ class BuilderBase(object):
 
         .. code-block:: python
 
-                >>> w = Builder.load_string(\'''
-                ... Widget:
-                ...     height: self.width / 2. if self.disabled else self.width
-                ...     x: self.y + 50
-                ... \''')
-                >>> w.size
-                [100, 100]
-                >>> w.pos
-                [50, 0]
-                >>> w.width = 500
-                >>> w.size
-                [500, 500]
-                >>> Builder.unbind_widget(w.uid)
-                >>> w.width = 222
-                >>> w.y = 500
-                >>> w.size
-                [222, 500]
-                >>> w.pos
-                [50, 500]
+            >>> w = Builder.load_string(\'''
+            ... Widget:
+            ...     height: self.width / 2. if self.disabled else self.width
+            ...     x: self.y + 50
+            ... \''')
+            >>> w.size
+            [100, 100]
+            >>> w.pos
+            [50, 0]
+            >>> w.width = 500
+            >>> w.size
+            [500, 500]
+            >>> Builder.unbind_widget(w.uid)
+            >>> w.width = 222
+            >>> w.y = 500
+            >>> w.size
+            [222, 500]
+            >>> w.pos
+            [50, 500]
 
         .. versionadded:: 1.7.2
         '''
@@ -827,6 +827,7 @@ class BuilderBase(object):
                 raise BuilderException(
                     prule.ctx, prule.line,
                     '{}: {}'.format(e.__class__.__name__, e), cause=tb)
+
 
 #: Main instance of a :class:`BuilderBase`.
 Builder = register_context('Builder', BuilderBase)

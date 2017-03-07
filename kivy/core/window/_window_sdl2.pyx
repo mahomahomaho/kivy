@@ -1,11 +1,12 @@
 include "../../../kivy/lib/sdl2.pxi"
-include "../../../kivy/graphics/config.pxi"
+include "../../include/config.pxi"
 
 from libc.string cimport memcpy
 from os import environ
 from kivy.config import Config
 from kivy.logger import Logger
 from kivy import platform
+from kivy.graphics.cgl import cgl_get_backend_name
 
 from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 
@@ -77,6 +78,8 @@ cdef class _WindowSDL2Storage:
         elif state == 'hidden':
             self.win_flags |= SDL_WINDOW_HIDDEN
 
+        SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, b'0')
+
         if SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0:
             self.die()
 
@@ -96,13 +99,18 @@ cdef class _WindowSDL2Storage:
 
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16)
-        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1)
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8)
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8)
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8)
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8)
         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8)
         SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0)
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1)
+
+        if cgl_get_backend_name() == "angle_sdl2":
+            Logger.info("Window: Activate GLES2/ANGLE context")
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, 4)
+            SDL_SetHint(SDL_HINT_VIDEO_WIN_D3DCOMPILER, "none")
 
         if x is None:
             x = SDL_WINDOWPOS_UNDEFINED
@@ -136,11 +144,15 @@ cdef class _WindowSDL2Storage:
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0)
 
-        IF not USE_OPENGL_MOCK:
+        if cgl_get_backend_name() != "mock":
             self.ctx = SDL_GL_CreateContext(self.win)
             if not self.ctx:
                 self.die()
-        SDL_JoystickOpen(0)
+
+        # Open all available joysticks
+        cdef int joy_i
+        for joy_i in range(SDL_NumJoysticks()):
+            SDL_JoystickOpen(joy_i)
 
         SDL_SetEventFilter(_event_filter, <void *>self)
 
@@ -164,7 +176,7 @@ cdef class _WindowSDL2Storage:
         cdef SDL_DisplayMode mode
         cdef int draw_w, draw_h
         SDL_GetWindowDisplayMode(self.win, &mode)
-        if USE_IOS and not USE_OPENGL_MOCK:
+        if USE_IOS and self.ctx:
             SDL_GL_GetDrawableSize(self.win, &draw_w, &draw_h)
             mode.w = draw_w
             mode.h = draw_h
@@ -183,6 +195,12 @@ cdef class _WindowSDL2Storage:
 
     def set_minimum_size(self, w, h):
         SDL_SetWindowMinimumSize(self.win, w, h)
+
+    def set_allow_screensaver(self, allow_screensaver):
+        if allow_screensaver:
+            SDL_EnableScreenSaver()
+        else:
+            SDL_DisableScreenSaver()
 
     def maximize_window(self):
         SDL_MaximizeWindow(self.win)
@@ -212,16 +230,25 @@ cdef class _WindowSDL2Storage:
         IF not USE_IOS:
             SDL_SetWindowFullscreen(self.win, mode)
 
-    def set_window_title(self,  title):
+    def set_window_title(self, title):
         SDL_SetWindowTitle(self.win, <bytes>title.encode('utf-8'))
+
+    def get_window_pos(self):
+        cdef int x, y
+        SDL_GetWindowPosition(self.win, &x, &y)
+        return x, y
+
+    def set_window_pos(self, x, y):
+        SDL_SetWindowPosition(self.win, x, y)
 
     def set_window_icon(self, filename):
         icon = IMG_Load(<bytes>filename.encode('utf-8'))
         SDL_SetWindowIcon(self.win, icon)
 
     def teardown_window(self):
-        IF not USE_OPENGL_MOCK:
+        if self.ctx != NULL:
             SDL_GL_DeleteContext(self.ctx)
+            self.ctx = NULL
         SDL_DestroyWindow(self.win)
         SDL_Quit()
 

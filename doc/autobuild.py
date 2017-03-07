@@ -14,7 +14,8 @@ ignore_list = (
     'kivy.graphics.vbo',
     'kivy.graphics.vertex',
     'kivy.uix.recycleview.__init__',
-    'kivy.setupconfig'
+    'kivy.setupconfig',
+    'kivy.version'
 )
 
 import os
@@ -38,7 +39,6 @@ import kivy.core.text
 import kivy.core.text.markup
 import kivy.core.video
 import kivy.core.window
-import kivy.ext
 import kivy.geometry
 import kivy.graphics
 import kivy.graphics.shader
