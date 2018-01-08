@@ -6,29 +6,30 @@ Installation
 We try not to reinvent the wheel, but to bring something innovative to the
 market. As a consequence, we're focused on our own code and use pre-existing,
 high quality third-party libraries where possible.
-To support the full, rich set of features that Kivy offers, several other libraries are
-required. If you do not use a specific feature (e.g. video playback), you
-don't need the corresponding dependency.
+
+To support the full, rich set of features that Kivy offers, several other
+libraries are required. If you do not use a specific feature (e.g. video
+playback), you don't need the corresponding dependency.
+
 That said, there is one dependency that Kivy **does** require:
 `Cython <http://cython.org>`_.
 
-|cython_note|
-
 In addition, you need a `Python <http://python.org/>`_ 2.x (2.7 <= x < 3.0)
-or 3.x (3.3 <= x)
-interpreter. If you want to enable features like windowing (i.e. open a Window),
-audio/video playback or spelling correction, additional dependencies must
-be available. For these, we recommend `SDL2 <https://www.libsdl.org/download-2.0.php>`_, `Gstreamer 1.x
-<http://www.gstreamer.net/>`_ and `PyEnchant
-<https://pythonhosted.org/pyenchant/>`_, respectively.
-
+or 3.x (3.3 <= x) interpreter. If you want to enable features like windowing
+(i.e. open a Window), audio/video playback or spelling correction, additional
+dependencies must be available. For these, we recommend
+`SDL2 <https://www.libsdl.org/download-2.0.php>`_,
+`Gstreamer 1.x <http://www.gstreamer.net/>`_ and
+`PyEnchant <https://pythonhosted.org/pyenchant/>`_ respectively.
 
 Other optional libraries (mutually independent) are:
 
-    * `OpenCV 2.0 <http://sourceforge.net/projects/opencvlibrary/>`_ -- Camera input.
-    * `Pillow <https://python-pillow.github.io/>`_ -- Image and text display.
-    * `PyEnchant <https://pythonhosted.org/pyenchant/>`_ -- Spelling correction.
-
+* `OpenCV 2.0 <http://sourceforge.net/projects/opencvlibrary/>`_
+  -- Camera input,
+* `Pillow <https://python-pillow.github.io/>`_
+  -- Image and text display,
+* `PyEnchant <https://pythonhosted.org/pyenchant/>`_
+  -- Spelling correction.
 
 That said, **DON'T PANIC**!
 
@@ -37,6 +38,21 @@ Instead, we have created nice portable packages that you can use directly,
 and they already contain the necessary packages for your platform.
 We just want you to know that there are alternatives to the defaults and give
 you an overview of the things Kivy uses internally.
+
+
+.. _installation_deps:
+
+Dependencies
+------------
+
+Here are listed dependencies required for Kivy to run and have/had issues
+in specific versions that broke our core functionality and Kivy either
+doesn't compile or can throw errors:
+
+.. toctree::
+    :maxdepth: 2
+
+    deps-cython
 
 
 Stable Version
@@ -53,7 +69,6 @@ Please refer to the installation instructions for your specific platform:
     installation-linux
     installation-android
     installation-rpi
-    troubleshooting-osx
 
 
 .. _installation_devel:
@@ -93,6 +108,18 @@ For Ubuntu 15.04 and versions older than 12.04, this one should work::
     $ sudo apt-get install python-setuptools python-pygame python-opengl \
       python-gst0.10 python-enchant gstreamer0.10-plugins-good python-dev \
       build-essential libgl1-mesa-dev libgles2-mesa-dev zlib1g-dev python-pip
+
+For Ubuntu 16.04::
+
+    $ sudo apt-get install python-setuptools python-pygame python-opengl \
+      python-gst0.10 python-enchant gstreamer0.10-plugins-good python-dev \
+      build-essential python-pip libgl1-mesa-dev libgles2-mesa-dev zlib1g-dev
+
+For Ubuntu 17.10::
+
+    $ sudo apt-get install python-setuptools python-pygame python-opengl \
+      python-enchant python-dev build-essential python-pip libgl1-mesa-dev \
+      libgles2-mesa-dev zlib1g-dev
 
 Kivy requires a recent version of Cython, so it's better to use the latest
 supported version from pypi:

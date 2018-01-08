@@ -5,12 +5,24 @@ PIL: PIL image loader
 __all__ = ('ImageLoaderPIL', )
 
 try:
-    from PIL import Image as PILImage
-except:
     import Image as PILImage
+except ImportError:
+    # for python3
+    from PIL import Image as PILImage
 
 from kivy.logger import Logger
 from kivy.core.image import ImageLoaderBase, ImageData, ImageLoader
+
+try:
+    # Pillow
+    PILImage.frombytes
+    PILImage.Image.tobytes
+except AttributeError:
+    # PIL
+    # monkey patch frombytes and tobytes methods, refs:
+    # https://github.com/kivy/kivy/issues/5460
+    PILImage.frombytes = PILImage.frombuffer
+    PILImage.Image.tobytes = PILImage.Image.tostring
 
 
 class ImageLoaderPIL(ImageLoaderBase):
@@ -102,7 +114,8 @@ class ImageLoaderPIL(ImageLoaderBase):
 
     @staticmethod
     def save(filename, width, height, fmt, pixels, flipped=False):
-        image = PILImage.fromstring(fmt.upper(), (width, height), pixels)
+        image = PILImage.frombytes(fmt.upper(), (width, height), pixels)
+
         if flipped:
             image = image.transpose(PILImage.FLIP_TOP_BOTTOM)
         image.save(filename)

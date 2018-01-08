@@ -37,21 +37,12 @@ Debian  (Jessie or newer)
 
 #. Add one of the PPAs to your sources.list in apt manually or via Synaptic
 
-    * Jessie/Testing:
+    :stable builds:
+        deb http://ppa.launchpad.net/kivy-team/kivy/ubuntu xenial main
+    :daily builds:
+        deb http://ppa.launchpad.net/kivy-team/kivy-daily/ubuntu xenial main
 
-        :stable builds:
-            deb http://ppa.launchpad.net/kivy-team/kivy/ubuntu trusty main
-        :daily builds:
-            deb http://ppa.launchpad.net/kivy-team/kivy-daily/ubuntu trusty main
-
-    * Sid/Unstable:
-
-        :stable builds:
-            deb http://ppa.launchpad.net/kivy-team/kivy/ubuntu utopic main
-        :daily builds:
-            deb http://ppa.launchpad.net/kivy-team/kivy-daily/ubuntu utopic main
-
-        **Notice**: Wheezy is not supported - You'll need to upgrade to Jessie at least!
+    **Notice**: Wheezy is not supported - You'll need to upgrade to Jessie at least!
 
 #. Add the GPG key to your apt keyring by executing
 
@@ -71,7 +62,7 @@ Linux Mint
 ----------
 
 #. Find out on which Ubuntu release your installation is based on, using this
-   `overview <http://www.linuxmint.com/oldreleases.php>`_.
+   `overview <https://linuxmint.com/download_all.php>`_.
 #. Continue as described for Ubuntu above, depending on which version your
    installation is based on.
 
@@ -88,6 +79,8 @@ Bodhi Linux
         Ubuntu 12.04 LTS aka Precise
     :Bodhi 3:
         Ubuntu 14.04 LTS aka Trusty
+    :Bodhi 4:
+        Ubuntu 16.04 LTS aka Xenial
 
 
 2. Continue as described for Ubuntu above, depending on which version your installation is based on.
@@ -144,8 +137,8 @@ Gentoo
    `spell: Standard flag, provide enchant to use spelling in kivy apps.`
 
 
-*Installation in a Virtual Environment*
-=======================================
+Installation in a Virtual Environment
+=====================================
 
 
 Common dependencies
@@ -165,11 +158,12 @@ Kivy       Cython
 1.8        0.20.2
 1.9        0.21.2
 1.9.1      0.23
+1.10.1     0.25
 ========   =============
 
 
-*Dependencies with SDL2*
-~~~~~~~~~~~~~~~~~~~~~~~~
+Dependencies with SDL2
+~~~~~~~~~~~~~~~~~~~~~~
 
 
 Ubuntu example
@@ -196,6 +190,13 @@ In the following command use "python" and "python-dev" for Python 2, or "python3
         libavformat-dev \
         libavcodec-dev \
         zlib1g-dev
+        
+    # Install gstreamer for audio, video (optional)
+    sudo apt-get install -y \
+        libgstreamer1.0 \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good
+        
 
 **Note:**  Depending on your Linux version, you may receive error messages related to the "ffmpeg" package.
 In this scenario, use "libav-tools \" in place of "ffmpeg \" (above), or use a PPA (as shown below):
@@ -211,7 +212,7 @@ Installation
 ------------
 
 
-::
+.. parsed-literal::
 
     # Make sure Pip, Virtualenv and Setuptools are updated
     sudo pip install --upgrade pip virtualenv setuptools
@@ -229,7 +230,7 @@ Installation
     . kivyinstall/bin/activate
 
     # Use correct Cython version here
-    pip install Cython==0.23
+    pip install |cython_install|
 
     # Install stable version of Kivy into the virtualenv
     pip install kivy
@@ -237,8 +238,8 @@ Installation
     # pip install git+https://github.com/kivy/kivy.git@master
 
 
-*Dependencies with legacy PyGame*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Dependencies with legacy PyGame
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Ubuntu example
@@ -311,7 +312,7 @@ OpenSuse
 Installation
 ------------
 
-::
+.. parsed-literal::
 
     # Make sure Pip, Virtualenv and Setuptools are updated
     sudo pip install --upgrade pip virtualenv setuptools
@@ -330,7 +331,7 @@ Installation
 
     pip install numpy
 
-    pip install Cython==0.23
+    pip install |cython_install|
 
     # If you want to install pygame backend instead of sdl2
     # you can install pygame using command below and enforce using
@@ -364,8 +365,8 @@ Install additional Virtualenv packages
 .. _linux-run-app:
 
 
-*Start from the Command Line*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Start from the Command Line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We ship some examples that are ready-to-run. However, these examples are packaged inside the package.
 This means you must first know where easy_install has installed your current kivy package,
@@ -416,3 +417,35 @@ Then, inside each main.py, add a new first line::
 
 NOTE: Beware of Python files stored with Windows-style line endings (CR-LF). Linux will not ignore the <CR>
 and will try to use it as part of the file name. This makes confusing error messages. Convert to Unix line endings.
+
+Device permissions
+~~~~~~~~~~~~~~~~~~
+
+When you app starts, Kivy uses `Mtdev <http://wiki.ubuntu.com/Multitouch>`_ to
+scan for available multi-touch devices to use for input. Access to these
+devices is typically restricted to users or group with the appropriate
+permissions.
+
+If you do not have access to these devices, Kivy will log an error or warning
+specifying these devices, normally something like::
+
+    Permission denied:'/dev/input/eventX'
+
+In order to use these devices, you need to grant the user or group permission.
+This can be done via::
+
+    $ sudo chmod u+r /dev/input/eventX
+
+for the user or::
+
+    $ sudo chmod g+r /dev/input/eventX
+
+for the group. These permissions will only be effective for the duration of
+your current session. A more permanent solution is to add the user to a group
+that has these permissions. For example, in Ubuntu, you can add the user to
+the 'input' group::
+
+    $ sudo adduser $USER input
+
+Note that you need to log out then back in again for these permissions to
+be applied.

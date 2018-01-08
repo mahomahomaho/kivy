@@ -12,14 +12,10 @@ __all__ = ('Instruction', 'InstructionGroup',
            'Canvas', 'CanvasBase',
            'RenderContext', 'Callback')
 
-include "config.pxi"
+include "../include/config.pxi"
 include "opcodes.pxi"
 
-from c_opengl cimport *
-IF USE_OPENGL_MOCK == 1:
-    from kivy.graphics.c_opengl_mock cimport *
-IF USE_OPENGL_DEBUG == 1:
-    from c_opengl_debug cimport *
+from kivy.graphics.cgl cimport *
 from kivy.compat import PY2
 from kivy.logger import Logger
 from kivy.graphics.context cimport get_context, Context
@@ -34,11 +30,13 @@ cdef void reset_gl_context():
     global _need_reset_gl, _active_texture
     _need_reset_gl = 0
     _active_texture = 0
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE)
-    glActiveTexture(GL_TEXTURE0)
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+    cgl.glEnable(GL_BLEND)
+    cgl.glDisable(GL_DEPTH_TEST)
+    cgl.glEnable(GL_STENCIL_TEST)
+    cgl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    cgl.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE)
+    cgl.glActiveTexture(GL_TEXTURE0)
+    cgl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 
 
 cdef class Instruction(ObjectWithUid):
@@ -97,7 +95,7 @@ cdef class Instruction(ObjectWithUid):
     cdef void set_parent(self, Instruction parent):
         self.parent = parent
 
-    cdef void reload(self):
+    cdef void reload(self) except *:
         self.flags |= GI_NEEDS_UPDATE
         self.flags &= ~GI_NO_APPLY_ONCE
         self.flags &= ~GI_IGNORE
@@ -225,7 +223,7 @@ cdef class InstructionGroup(Instruction):
         cdef Instruction c
         return [c for c in self.children if c.group == groupname]
 
-    cdef void reload(self):
+    cdef void reload(self) except *:
         Instruction.reload(self)
         cdef Instruction c
         for c in self.children:
@@ -478,29 +476,29 @@ cdef class Callback(Instruction):
         cdef Shader shader
         cdef int i
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        cgl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        cgl.glBindBuffer(GL_ARRAY_BUFFER, 0)
 
         if self.func(self):
             self.flag_update_done()
 
         if self._reset_context:
             # FIXME do that in a proper way
-            glDisable(GL_DEPTH_TEST)
-            glDisable(GL_CULL_FACE)
-            glDisable(GL_SCISSOR_TEST)
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE)
-            glUseProgram(0)
+            cgl.glDisable(GL_DEPTH_TEST)
+            cgl.glDisable(GL_CULL_FACE)
+            cgl.glDisable(GL_SCISSOR_TEST)
+            cgl.glEnable(GL_BLEND)
+            cgl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            cgl.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE)
+            cgl.glUseProgram(0)
 
             # FIXME don't use 10. use max texture available from gl conf
             for i in xrange(10):
-                glActiveTexture(GL_TEXTURE0 + i)
-                glBindTexture(GL_TEXTURE_2D, 0)
-                glDisableVertexAttribArray(i)
-                glBindBuffer(GL_ARRAY_BUFFER, 0)
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+                cgl.glActiveTexture(GL_TEXTURE0 + i)
+                cgl.glBindTexture(GL_TEXTURE_2D, 0)
+                cgl.glDisableVertexAttribArray(i)
+                cgl.glBindBuffer(GL_ARRAY_BUFFER, 0)
+                cgl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
             # reset all the vertexformat in all shaders
             ctx = get_context()
@@ -576,7 +574,7 @@ cdef class Canvas(CanvasBase):
         self._before = None
         self._after = None
 
-    cdef void reload(self):
+    cdef void reload(self) except *:
         return
         '''
         # XXX ensure it's not needed anymore.
@@ -745,6 +743,7 @@ cdef class RenderContext(Canvas):
     def __cinit__(self, *args, **kwargs):
         self._use_parent_projection = 0
         self._use_parent_modelview = 0
+        self._use_parent_frag_modelview = 0
         self.bind_texture = dict()
 
     def __init__(self, *args, **kwargs):
@@ -767,6 +766,7 @@ cdef class RenderContext(Canvas):
             'color'    : [[1.0,1.0,1.0,1.0]],
             'projection_mat': [Matrix()],
             'modelview_mat' : [Matrix()],
+            'frag_modelview_mat' : [Matrix()],
         }
 
         cdef str key
@@ -778,6 +778,8 @@ cdef class RenderContext(Canvas):
             self._use_parent_projection = bool(int(kwargs['use_parent_projection']))
         if 'use_parent_modelview' in kwargs:
             self._use_parent_modelview = bool(int(kwargs['use_parent_modelview']))
+        if 'use_parent_frag_modelview' in kwargs:
+            self._use_parent_frag_modelview = bool(int(kwargs['use_parent_frag_modelview']))
 
     cdef void set_state(self, str name, value, int apply_now=0):
         # Upload the uniform value to the shader
@@ -833,7 +835,7 @@ cdef class RenderContext(Canvas):
         self.bind_texture[index] = texture
         if _active_texture != index:
             _active_texture = index
-            glActiveTexture(GL_TEXTURE0 + index)
+            cgl.glActiveTexture(GL_TEXTURE0 + index)
         texture.bind()
         self.flag_update()
 
@@ -859,6 +861,9 @@ cdef class RenderContext(Canvas):
         if self._use_parent_modelview:
             self.set_state('modelview_mat',
                     active_context.get_state('modelview_mat'), 0)
+        if self._use_parent_frag_modelview:
+            self.set_state('frag_modelview_mat',
+                    active_context.get_state('frag_modelview_mat'), 0)
         pushActiveContext(self)
         if _need_reset_gl:
             reset_gl_context()
@@ -870,7 +875,7 @@ cdef class RenderContext(Canvas):
 
         return 0
 
-    cdef void reload(self):
+    cdef void reload(self) except *:
         pushActiveContext(self)
         reset_gl_context()
         Canvas.reload(self)
@@ -930,6 +935,21 @@ cdef class RenderContext(Canvas):
                 self._use_parent_modelview = cvalue
                 self.flag_update()
 
+    property use_parent_frag_modelview:
+        '''If True, the parent fragment modelview matrix will be used.
+
+        .. versionadded:: 1.10.1
+
+            rc = RenderContext(use_parent_frag_modelview=True)
+        '''
+        def __get__(self):
+            return bool(self._use_parent_frag_modelview)
+        def __set__(self, value):
+            cdef cvalue = int(bool(value))
+            if self._use_parent_frag_modelview != cvalue:
+                self._use_parent_frag_modelview = cvalue
+                self.flag_update()
+
 
 cdef RenderContext ACTIVE_CONTEXT = None
 cdef list CONTEXT_STACK  = list()
@@ -954,4 +974,3 @@ cdef popActiveContext():
     ACTIVE_CONTEXT = CONTEXT_STACK.pop()
     if ACTIVE_CONTEXT:
         ACTIVE_CONTEXT.enter()
-

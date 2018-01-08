@@ -328,11 +328,14 @@ class Widget(WidgetBase):
             self._context = get_current_context()
 
         no_builder = '__no_builder' in kwargs
+        self._disabled_value = False
         if no_builder:
             del kwargs['__no_builder']
         on_args = {k: v for k, v in kwargs.items() if k[:3] == 'on_'}
         for key in on_args:
             del kwargs[key]
+
+        self._disabled_count = 0
 
         super(Widget, self).__init__(**kwargs)
 
@@ -386,9 +389,9 @@ class Widget(WidgetBase):
 
         :Parameters:
             `x`: numeric
-                x position of the point (in window coordinates)
+                x position of the point (in parent coordinates)
             `y`: numeric
-                y position of the point (in window coordinates)
+                y position of the point (in parent coordinates)
 
         :Returns:
             A bool. True if the point is inside the bounding box, False
@@ -408,7 +411,7 @@ class Widget(WidgetBase):
 
         :Parameters:
             `wid`: :class:`Widget` class
-                Widget to collide with.
+                Widget to test collision with.
 
         :Returns:
             bool. True if the other widget collides with this widget, False
@@ -479,10 +482,6 @@ class Widget(WidgetBase):
             if child.dispatch('on_touch_up', touch):
                 return True
 
-    def on_disabled(self, instance, value):
-        for child in self.children:
-            child.disabled = value
-
     #
     # Tree management
     #
@@ -532,8 +531,7 @@ class Widget(WidgetBase):
                                   % (widget, parent))
         widget.parent = parent = self
         # Child will be disabled if added to a disabled parent.
-        if parent.disabled:
-            widget.disabled = True
+        widget._disabled_count = self._disabled_count
 
         canvas = self.canvas.before if canvas == 'before' else \
             self.canvas.after if canvas == 'after' else self.canvas
@@ -615,8 +613,8 @@ class Widget(WidgetBase):
             The image includes only this widget and its children. If you want
             to include widgets elsewhere in the tree, you must call
             :meth:`~Widget.export_to_png` from their common parent, or use
-            :meth:`~kivy.core.window.WindowBase.screenshot` to capture the whole
-            window.
+            :meth:`~kivy.core.window.WindowBase.screenshot` to capture the
+            whole window.
 
         .. note::
 
@@ -634,7 +632,7 @@ class Widget(WidgetBase):
         fbo = Fbo(size=self.size, with_stencilbuffer=True)
 
         with fbo:
-            ClearColor(0, 0, 0, 1)
+            ClearColor(0, 0, 0, 0)
             ClearBuffers()
             Scale(1, -1, 1)
             Translate(-self.x, -self.y - self.height, 0)
@@ -1060,8 +1058,8 @@ class Widget(WidgetBase):
     '''
 
     size_hint_x = NumericProperty(1, allownone=True)
-    '''X size hint. Represents how much space the widget should use in the
-    direction of the X axis relative to its parent's width.
+    '''x size hint. Represents how much space the widget should use in the
+    direction of the x axis relative to its parent's width.
     Only the :class:`~kivy.uix.layout.Layout` and
     :class:`~kivy.core.window.Window` classes make use of the hint.
 
@@ -1086,7 +1084,7 @@ class Widget(WidgetBase):
     '''
 
     size_hint_y = NumericProperty(1, allownone=True)
-    '''Y size hint.
+    '''y size hint.
 
     :attr:`size_hint_y` is a :class:`~kivy.properties.NumericProperty` and
     defaults to 1.
@@ -1128,7 +1126,7 @@ class Widget(WidgetBase):
     '''
 
     size_hint_min_x = NumericProperty(None, allownone=True)
-    '''When not None, the X-direction minimum size (in pixels,
+    '''When not None, the x-direction minimum size (in pixels,
     like :attr:`width`) when :attr:`size_hint_x` is also not None.
 
     When :attr:`size_hint_x` is not None, it is the minimum width that the
@@ -1143,11 +1141,11 @@ class Widget(WidgetBase):
     :attr:`size_hint_min_x` is a :class:`~kivy.properties.NumericProperty` and
     defaults to None.
 
-    .. versionadded:: 1.9.2
+    .. versionadded:: 1.10.0
     '''
 
     size_hint_min_y = NumericProperty(None, allownone=True)
-    '''When not None, the Y-direction minimum size (in pixels,
+    '''When not None, the y-direction minimum size (in pixels,
     like :attr:`height`) when :attr:`size_hint_y` is also not None.
 
     When :attr:`size_hint_y` is not None, it is the minimum height that the
@@ -1162,7 +1160,7 @@ class Widget(WidgetBase):
     :attr:`size_hint_min_y` is a :class:`~kivy.properties.NumericProperty` and
     defaults to None.
 
-    .. versionadded:: 1.9.2
+    .. versionadded:: 1.10.0
     '''
 
     size_hint_min = ReferenceListProperty(size_hint_min_x, size_hint_min_y)
@@ -1171,11 +1169,11 @@ class Widget(WidgetBase):
     :attr:`size_hint_min` is a :class:`~kivy.properties.ReferenceListProperty`
     of (:attr:`size_hint_min_x`, :attr:`size_hint_min_y`) properties.
 
-    .. versionadded:: 1.9.2
+    .. versionadded:: 1.10.0
     '''
 
     size_hint_max_x = NumericProperty(None, allownone=True)
-    '''When not None, the X-direction maximum size (in pixels,
+    '''When not None, the x-direction maximum size (in pixels,
     like :attr:`width`) when :attr:`size_hint_x` is also not None.
 
     Similar to :attr:`size_hint_min_x`, except that it sets the maximum width.
@@ -1183,11 +1181,11 @@ class Widget(WidgetBase):
     :attr:`size_hint_max_x` is a :class:`~kivy.properties.NumericProperty` and
     defaults to None.
 
-    .. versionadded:: 1.9.2
+    .. versionadded:: 1.10.0
     '''
 
     size_hint_max_y = NumericProperty(None, allownone=True)
-    '''When not None, the Y-direction maximum size (in pixels,
+    '''When not None, the y-direction maximum size (in pixels,
     like :attr:`height`) when :attr:`size_hint_y` is also not None.
 
     Similar to :attr:`size_hint_min_y`, except that it sets the maximum height.
@@ -1195,7 +1193,7 @@ class Widget(WidgetBase):
     :attr:`size_hint_max_y` is a :class:`~kivy.properties.NumericProperty` and
     defaults to None.
 
-    .. versionadded:: 1.9.2
+    .. versionadded:: 1.10.0
     '''
 
     size_hint_max = ReferenceListProperty(size_hint_max_x, size_hint_max_y)
@@ -1204,7 +1202,7 @@ class Widget(WidgetBase):
     :attr:`size_hint_max` is a :class:`~kivy.properties.ReferenceListProperty`
     of (:attr:`size_hint_max_x`, :attr:`size_hint_max_y`) properties.
 
-    .. versionadded:: 1.9.2
+    .. versionadded:: 1.10.0
     '''
 
     ids = DictProperty({})
@@ -1305,7 +1303,32 @@ class Widget(WidgetBase):
     See :class:`~kivy.graphics.Canvas` for more information about the usage.
     '''
 
-    disabled = BooleanProperty(False)
+    def get_disabled(self):
+        return self._disabled_count > 0
+
+    def set_disabled(self, value):
+        if value != self._disabled_value:
+            self._disabled_value = value
+            if value:
+                self.inc_disabled()
+            else:
+                self.dec_disabled()
+
+    def inc_disabled(self):
+        self._disabled_count += 1
+        if self._disabled_count == 1:
+            self.property('disabled').dispatch(self)
+        for c in self.children:
+            c.inc_disabled()
+
+    def dec_disabled(self):
+        self._disabled_count -= 1
+        if self._disabled_count == 0:
+            self.property('disabled').dispatch(self)
+        for c in self.children:
+            c.dec_disabled()
+
+    disabled = AliasProperty(get_disabled, set_disabled)
     '''Indicates whether this widget can interact with input or not.
 
     .. note::
@@ -1319,4 +1342,9 @@ class Widget(WidgetBase):
 
     :attr:`disabled` is a :class:`~kivy.properties.BooleanProperty` and
     defaults to False.
+
+    .. versionchanged:: 1.10.1
+    :attr:`disabled` is now an :class:`~kivy.properties.AliasProperty`
+    which allows to remember the previous disabled state when a parent's
+    disabled state is changed.
     '''
