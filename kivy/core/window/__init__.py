@@ -1437,6 +1437,15 @@ class WindowBase(EventDispatcher):
         from math import radians
 
         w, h = self.system_size
+        Logger.debug("density=%s system_size=%s,%s", self._density, w, h)
+
+        # calculate density
+        sz = self._win._get_gl_size()[0]
+        self._density = density = sz / w
+        Logger.debug("sz = %s self._density=%s size=%s", sz, self._density, w)
+        if self._is_desktop and self.size[0] != w:
+            self.dpi = density * 96.
+
         if self._density != 1:
             w, h = self.size
 

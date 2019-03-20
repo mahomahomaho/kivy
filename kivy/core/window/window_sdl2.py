@@ -278,6 +278,7 @@ class WindowSDL(WindowBase):
             # calculate density
             sz = self._win._get_gl_size()[0]
             self._density = density = sz / _size[0]
+            Logger.debug("sz = %s self._density=%s size=%s", sz, self._density, _size)
             if self._is_desktop and self.size[0] != _size[0]:
                 self.dpi = density * 96.
 
